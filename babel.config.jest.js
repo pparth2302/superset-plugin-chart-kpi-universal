@@ -13,7 +13,6 @@ const config = getConfig({
 
 config.ignore = [];
 config.plugins = [
-  ['babel-plugin-transform-dev', { evaluate: false }],
   ['babel-plugin-typescript-to-proptypes', { loose: true }],
   ['@babel/plugin-proposal-class-properties', { loose: true }],
 ];

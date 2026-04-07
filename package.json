@@ -1,6 +1,6 @@
 {
   "name": "@pparth2302/superset-plugin-chart-kpi-universal",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Apache Superset 6.0.0 plugin for reusable manufacturing-style KPI cards with ECharts sparklines.",
   "sideEffects": false,
   "main": "lib/index.js",
@@ -13,15 +13,15 @@
   "private": false,
   "scripts": {
     "build": "npm run build-cjs && npm run build-esm && npm run ts-types",
-    "build-cjs": "babel src --extensions \".ts,.tsx,.js,.jsx\" --copy-files --out-dir lib",
+    "build-cjs": "node ./node_modules/@babel/cli/bin/babel.js src --extensions \".ts,.tsx,.js,.jsx\" --copy-files --out-dir lib",
     "build-clean": "npm run clean && npm run build",
     "build-esm": "node scripts/run-babel-esm.mjs",
     "dev": "node scripts/run-babel-esm.mjs --watch",
     "prebuild": "node scripts/clean.mjs",
     "postbuild": "npm run test",
     "clean": "node scripts/clean.mjs",
-    "ts-types": "tsc --build",
-    "test": "jest"
+    "ts-types": "node ./node_modules/typescript/bin/tsc --build",
+    "test": "node ./node_modules/jest/bin/jest.js --runInBand"
   },
   "keywords": [
     "superset",
