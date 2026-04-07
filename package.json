@@ -1,0 +1,63 @@
+{
+  "name": "@pparth2302/superset-plugin-chart-kpi-universal",
+  "version": "0.1.0",
+  "description": "Apache Superset 6.0.0 plugin for reusable manufacturing-style KPI cards with ECharts sparklines.",
+  "sideEffects": false,
+  "main": "lib/index.js",
+  "module": "esm/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "esm",
+    "lib"
+  ],
+  "private": false,
+  "scripts": {
+    "build": "npm run build-cjs && npm run build-esm && npm run ts-types",
+    "build-cjs": "babel src --extensions \".ts,.tsx,.js,.jsx\" --copy-files --out-dir lib",
+    "build-clean": "npm run clean && npm run build",
+    "build-esm": "node scripts/run-babel-esm.mjs",
+    "dev": "node scripts/run-babel-esm.mjs --watch",
+    "prebuild": "node scripts/clean.mjs",
+    "postbuild": "npm run test",
+    "clean": "node scripts/clean.mjs",
+    "ts-types": "tsc --build",
+    "test": "jest"
+  },
+  "keywords": [
+    "superset",
+    "apache-superset",
+    "plugin",
+    "echarts",
+    "kpi",
+    "manufacturing",
+    "dashboard",
+    "oee"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "echarts": "^5.6.0"
+  },
+  "peerDependencies": {
+    "@superset-ui/chart-controls": "^0.20.3",
+    "@superset-ui/core": "^0.20.4",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@airbnb/config-babel": "^2.0.1",
+    "@babel/cli": "^7.16.0",
+    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "@superset-ui/chart-controls": "^0.20.3",
+    "@superset-ui/core": "^0.20.4",
+    "@types/jest": "^26.0.4",
+    "@types/react": "^17.0.89",
+    "babel-plugin-transform-dev": "^1.0.2",
+    "babel-plugin-typescript-to-proptypes": "^2.1.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.1.2"
+  }
+}
