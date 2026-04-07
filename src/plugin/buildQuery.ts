@@ -21,7 +21,6 @@ import { buildQueryContext } from '@superset-ui/core';
 import type {
   QueryFormData,
   QueryFormMetric,
-  QueryFormOrderBy,
   QueryObject,
 } from '@superset-ui/core';
 import {
@@ -73,15 +72,13 @@ export default function buildQuery(formData: QueryFormData) {
     ];
 
     if (shouldQueryTimeseries && primaryMetric) {
-      const orderby: QueryFormOrderBy[] = timeColumnLabel
-        ? [[timeColumnLabel, true]]
-        : [];
-
       queries.push({
         ...baseQueryObject,
         columns: [],
         metrics: [primaryMetric],
-        orderby,
+        // Let Superset own the grouped time-series SQL shape. Ordering by the raw
+        // time column breaks on SQL Server once time grain aggregation is applied.
+        orderby: [],
         row_limit: rowLimit,
         series_columns: [],
         is_timeseries: true,

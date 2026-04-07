@@ -46,11 +46,12 @@ export default function buildQuery(formData) {
       is_timeseries: false
     })];
     if (shouldQueryTimeseries && primaryMetric) {
-      var orderby = timeColumnLabel ? [[timeColumnLabel, true]] : [];
       queries.push(_extends({}, baseQueryObject, {
         columns: [],
         metrics: [primaryMetric],
-        orderby,
+        // Let Superset own the grouped time-series SQL shape. Ordering by the raw
+        // time column breaks on SQL Server once time grain aggregation is applied.
+        orderby: [],
         row_limit: rowLimit,
         series_columns: [],
         is_timeseries: true

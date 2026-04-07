@@ -42,7 +42,7 @@ describe('Universal KPI Card buildQuery', () => {
     expect(queryContext.queries[0].row_limit).toBe(1);
     expect(queryContext.queries[1].metrics).toEqual(['AVG(oee)']);
     expect(queryContext.queries[1].is_timeseries).toBe(true);
-    expect(queryContext.queries[1].orderby).toEqual([['event_time', true]]);
+    expect(queryContext.queries[1].orderby).toEqual([]);
     expect(queryContext.queries[1].row_limit).toBe(250);
   });
 
