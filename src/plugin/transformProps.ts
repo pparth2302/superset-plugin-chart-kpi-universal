@@ -29,11 +29,15 @@ import {
   DEFAULT_KPI_VALUE_FONT_SIZE,
   DEFAULT_NO_DATA_MESSAGE,
   DEFAULT_SPARKLINE_FILL_OPACITY,
+  DEFAULT_SPARKLINE_HEIGHT,
   DEFAULT_SPARKLINE_LINE_WIDTH,
+  DEFAULT_SPARKLINE_SOURCE,
+  DEFAULT_SPARKLINE_WIDTH,
   DEFAULT_TITLE_FONT_SIZE,
   DEFAULT_TREND_CALCULATION_MODE,
   DEFAULT_TREND_FONT_SIZE,
   DEFAULT_TREND_MEANING,
+  DEFAULT_TREND_SOURCE,
   DEFAULT_VALUE_COLUMN_WIDTH_PERCENT,
 } from '../constants';
 import type {
@@ -97,6 +101,26 @@ export default function transformProps(chartProps: ChartProps): KpiUniversalChar
     rawFormData.granularity_sqla ?? rawFormData.granularity,
   );
   const durationUnit = rawFormData.duration_unit ?? DEFAULT_DURATION_UNIT;
+  const requestedTrendCalculationMode =
+    rawFormData.trend_calculation_mode ?? DEFAULT_TREND_CALCULATION_MODE;
+  const trendCalculationMode =
+    requestedTrendCalculationMode === 'secondary_metric'
+      ? 'direct_secondary_value'
+      : requestedTrendCalculationMode;
+  const trendSource =
+    rawFormData.trend_source ??
+    (trendCalculationMode === 'direct_secondary_value'
+      ? 'secondary_metric'
+      : DEFAULT_TREND_SOURCE);
+  const sparklineSource = rawFormData.sparkline_source ?? DEFAULT_SPARKLINE_SOURCE;
+  const resolvedTrendSource =
+    trendSource === 'secondary_metric' && secondaryMetricLabel
+      ? 'secondary_metric'
+      : 'primary_metric';
+  const resolvedSparklineSource =
+    sparklineSource === 'secondary_metric' && secondaryMetricLabel
+      ? 'secondary_metric'
+      : 'primary_metric';
   const decimalPrecision = parsePositiveInteger(
     rawFormData.decimal_precision,
     DEFAULT_DECIMAL_PRECISION,
@@ -110,9 +134,10 @@ export default function transformProps(chartProps: ChartProps): KpiUniversalChar
   const kpiSourceMode = rawFormData.kpi_source_mode ?? DEFAULT_KPI_SOURCE_MODE;
   const showSparkline = rawFormData.show_sparkline ?? true;
   const enableTrend = rawFormData.enable_trend ?? true;
-  const trendCalculationMode =
-    rawFormData.trend_calculation_mode ?? DEFAULT_TREND_CALCULATION_MODE;
   const warnings: string[] = [];
+  const metricLookupExclusions = configuredTimeLabel
+    ? [configuredTimeLabel, '__timestamp']
+    : ['__timestamp'];
 
   const rawAggregatePrimaryValue = aggregateRow
     ? findRecordValue(aggregateRow, primaryMetricLabel, {
@@ -122,16 +147,29 @@ export default function transformProps(chartProps: ChartProps): KpiUniversalChar
   const rawTimeseriesPrimaryValue = getFirstMetricRawValue(
     timeseriesRows,
     primaryMetricLabel,
-    configuredTimeLabel ? [configuredTimeLabel, '__timestamp'] : ['__timestamp'],
+    metricLookupExclusions,
   );
+  const rawAggregateSecondaryValue =
+    aggregateRow && secondaryMetricLabel
+      ? findRecordValue(aggregateRow, secondaryMetricLabel, {
+          allowSingleNumericFallback: false,
+        })
+      : undefined;
+  const rawTimeseriesSecondaryValue = secondaryMetricLabel
+    ? getFirstMetricRawValue(timeseriesRows, secondaryMetricLabel, metricLookupExclusions)
+    : undefined;
   const primaryValueType = resolveValueType(rawFormData.value_type_mode, {
     metricLabel: primaryMetricLabel,
     rawValue: rawAggregatePrimaryValue ?? rawTimeseriesPrimaryValue,
     valueSuffix,
   });
+  const secondaryValueType = resolveValueType(rawFormData.value_type_mode, {
+    metricLabel: secondaryMetricLabel,
+    rawValue: rawAggregateSecondaryValue ?? rawTimeseriesSecondaryValue,
+  });
   const timeField = resolveTimeField(timeseriesRows, configuredTimeLabel);
 
-  const sparklineResult = timeField
+  const primarySparklineResult = timeField
     ? buildSparklineData(timeseriesRows, {
         metricLabel: primaryMetricLabel,
         timeField,
@@ -139,6 +177,15 @@ export default function transformProps(chartProps: ChartProps): KpiUniversalChar
         durationUnit,
       })
     : { data: [], invalidTimestampRows: 0 };
+  const secondarySparklineResult =
+    timeField && secondaryMetricLabel
+      ? buildSparklineData(timeseriesRows, {
+          metricLabel: secondaryMetricLabel,
+          timeField,
+          valueType: secondaryValueType,
+          durationUnit,
+        })
+      : { data: [], invalidTimestampRows: 0 };
 
   if (timeseriesRows.length && !timeField) {
     warnings.push(
@@ -146,22 +193,51 @@ export default function transformProps(chartProps: ChartProps): KpiUniversalChar
     );
   }
 
-  if (sparklineResult.invalidTimestampRows > 0) {
+  if (primarySparklineResult.invalidTimestampRows > 0) {
     warnings.push(
-      `${sparklineResult.invalidTimestampRows} sparkline row(s) were skipped because the timestamp field was missing or invalid.`,
+      `${primarySparklineResult.invalidTimestampRows} sparkline row(s) were skipped because the timestamp field was missing or invalid.`,
     );
   }
+  if (sparklineSource === 'secondary_metric' && !secondaryMetricLabel && showSparkline) {
+    warnings.push(
+      'Sparkline source is set to secondary metric, but no secondary metric is configured. Falling back to the primary metric series.',
+    );
+  }
+  if (
+    trendSource === 'secondary_metric' &&
+    !secondaryMetricLabel &&
+    enableTrend &&
+    trendCalculationMode !== 'direct_secondary_value'
+  ) {
+    warnings.push(
+      'Trend source is set to secondary metric, but no secondary metric is configured. Falling back to the primary metric series.',
+    );
+  }
+
+  const selectedSparklineSeries =
+    resolvedSparklineSource === 'secondary_metric'
+      ? secondarySparklineResult
+      : primarySparklineResult;
+  const selectedTrendSeries =
+    resolvedTrendSource === 'secondary_metric'
+      ? secondarySparklineResult
+      : primarySparklineResult;
 
   const aggregatePrimaryNumericValue = toNumericMetricValue(
     rawAggregatePrimaryValue,
     primaryValueType,
     durationUnit,
   );
+  const aggregateSecondaryNumericValue = toNumericMetricValue(
+    rawAggregateSecondaryValue,
+    secondaryValueType,
+    durationUnit,
+  );
   const timeseriesNumericValue = aggregateSparklineValue(
-    sparklineResult.data,
+    primarySparklineResult.data,
     kpiAggregationMode,
   );
-  const latestSparklineDatum = getLatestNumericSparklineDatum(sparklineResult.data);
+  const latestSparklineDatum = getLatestNumericSparklineDatum(primarySparklineResult.data);
 
   const aggregateCandidate: KpiValueResult = {
     source: 'aggregate',
@@ -195,34 +271,28 @@ export default function transformProps(chartProps: ChartProps): KpiUniversalChar
       })
     : '--';
 
-  const rawSecondaryValue =
-    aggregateRow && secondaryMetricLabel
-      ? findRecordValue(aggregateRow, secondaryMetricLabel, {
-          allowSingleNumericFallback: false,
-        })
-      : undefined;
-  const secondaryValueType = resolveValueType(rawFormData.value_type_mode, {
-    metricLabel: secondaryMetricLabel,
-    rawValue: rawSecondaryValue,
-  });
-  const secondaryNumericValue = toNumericMetricValue(
-    rawSecondaryValue,
-    secondaryValueType,
-    durationUnit,
-  );
-
-  if (trendCalculationMode === 'secondary_metric' && !secondaryMetricLabel) {
+  if (trendCalculationMode === 'direct_secondary_value' && !secondaryMetricLabel) {
     warnings.push(
-      'Trend calculation mode is set to secondary metric, but no secondary metric is configured.',
+      'Trend calculation mode is set to direct secondary value, but no secondary metric is configured.',
     );
   }
 
   const trend = enableTrend
     ? computeTrendResult({
         mode: trendCalculationMode,
-        sparklineData: sparklineResult.data,
-        secondaryValue: rawSecondaryValue,
-        secondaryNumericValue,
+        sparklineData: selectedTrendSeries.data,
+        secondaryValue:
+          trendCalculationMode === 'direct_secondary_value'
+            ? rawAggregateSecondaryValue
+            : resolvedTrendSource === 'secondary_metric'
+              ? rawAggregateSecondaryValue
+              : rawAggregatePrimaryValue,
+        secondaryNumericValue:
+          trendCalculationMode === 'direct_secondary_value'
+            ? aggregateSecondaryNumericValue
+            : resolvedTrendSource === 'secondary_metric'
+              ? aggregateSecondaryNumericValue
+              : aggregatePrimaryNumericValue,
         trendMeaning: rawFormData.trend_meaning ?? DEFAULT_TREND_MEANING,
         neutralThreshold: parseBoundedNumber(rawFormData.neutral_threshold, 0, {
           min: 0,
@@ -234,11 +304,34 @@ export default function transformProps(chartProps: ChartProps): KpiUniversalChar
         numberFormat,
         durationUnit,
         valueType:
-          trendCalculationMode === 'secondary_metric'
+          trendCalculationMode === 'direct_secondary_value'
             ? secondaryValueType
-            : primaryValueType,
+            : resolvedTrendSource === 'secondary_metric'
+              ? secondaryValueType
+              : primaryValueType,
       })
     : undefined;
+
+  const legacySparklineWidthPercent = parseBoundedNumber(
+    rawFormData.sparkline_width_percent,
+    36,
+    { min: 20, max: 60 },
+  );
+  const legacySparklineHeightPercent = parseBoundedNumber(
+    rawFormData.sparkline_height_percent,
+    24,
+    { min: 14, max: 40 },
+  );
+  const sparklineWidthFallback =
+    typeof rawFormData.sparkline_width === 'undefined'
+    && typeof rawFormData.sparkline_width_percent !== 'undefined'
+      ? Math.round((width * legacySparklineWidthPercent) / 100)
+      : DEFAULT_SPARKLINE_WIDTH;
+  const sparklineHeightFallback =
+    typeof rawFormData.sparkline_height === 'undefined'
+    && typeof rawFormData.sparkline_height_percent !== 'undefined'
+      ? Math.round((height * legacySparklineHeightPercent) / 100)
+      : DEFAULT_SPARKLINE_HEIGHT;
 
   const noData = !hasDisplayableValue(selectedValue);
   if (noData) {
@@ -264,7 +357,7 @@ export default function transformProps(chartProps: ChartProps): KpiUniversalChar
     showTrend: enableTrend,
     trend,
     showSparkline,
-    sparklineData: sparklineResult.data,
+    sparklineData: showSparkline ? selectedSparklineSeries.data : [],
     sparklineType: rawFormData.sparkline_type ?? 'area',
     sparklineSmooth: rawFormData.sparkline_smooth ?? true,
     sparklineFillOpacity: parseBoundedNumber(
@@ -276,6 +369,16 @@ export default function transformProps(chartProps: ChartProps): KpiUniversalChar
       rawFormData.sparkline_line_width,
       DEFAULT_SPARKLINE_LINE_WIDTH,
       { min: 1, max: 8 },
+    ),
+    sparklineWidth: parsePositiveInteger(
+      rawFormData.sparkline_width,
+      sparklineWidthFallback,
+      { min: 64, max: 240 },
+    ),
+    sparklineHeight: parsePositiveInteger(
+      rawFormData.sparkline_height,
+      sparklineHeightFallback,
+      { min: 24, max: 96 },
     ),
     padding: parsePositiveInteger(rawFormData.card_padding, DEFAULT_CARD_PADDING, {
       min: 8,

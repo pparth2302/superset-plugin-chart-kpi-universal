@@ -650,6 +650,7 @@ export function computeTrendResult(options: {
       formatValue = numericValue;
       break;
     }
+    case 'direct_secondary_value':
     case 'secondary_metric':
     default:
       numericValue = options.secondaryNumericValue;

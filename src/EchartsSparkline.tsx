@@ -30,6 +30,7 @@ export interface EchartsSparklineProps {
   fillOpacity: number;
   lineWidth: number;
   lineColor: string;
+  fillColor: string;
 }
 
 function buildSparklineOption(props: EchartsSparklineProps): EChartsOption {
@@ -41,8 +42,8 @@ function buildSparklineOption(props: EchartsSparklineProps): EChartsOption {
     grid: {
       left: 0,
       right: 0,
-      top: 4,
-      bottom: 0,
+      top: 2,
+      bottom: 2,
       containLabel: false,
     },
     tooltip: {
@@ -63,21 +64,37 @@ function buildSparklineOption(props: EchartsSparklineProps): EChartsOption {
         type: 'line',
         data: props.data.map(point => [point.timestamp, point.value]),
         smooth: props.smooth,
+        clip: true,
         showSymbol: numericPointCount === 1,
         symbol: 'circle',
-        symbolSize: numericPointCount === 1 ? 6 : 0,
+        symbolSize: numericPointCount === 1 ? 4 : 0,
         connectNulls: true,
         silent: true,
+        emphasis: {
+          disabled: true,
+        },
         lineStyle: {
           color: props.lineColor,
           width: props.lineWidth,
+          cap: 'round',
+          join: 'round',
         },
         itemStyle: {
           color: props.lineColor,
         },
+        z: 2,
         areaStyle: shouldFill
           ? {
-              color: withOpacity(props.lineColor, props.fillOpacity),
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                {
+                  offset: 0,
+                  color: withOpacity(props.fillColor, props.fillOpacity),
+                },
+                {
+                  offset: 1,
+                  color: withOpacity(props.fillColor, 0.015),
+                },
+              ]),
             }
           : undefined,
       },

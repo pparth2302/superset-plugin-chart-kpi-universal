@@ -71,7 +71,7 @@ describe('Universal KPI Card transformProps', () => {
         kpi_source_mode: 'direct_metric',
         value_type_mode: 'duration',
         duration_unit: 'seconds',
-        trend_calculation_mode: 'secondary_metric',
+        trend_calculation_mode: 'direct_secondary_value',
         trend_meaning: 'lower_is_better',
       },
       queriesData: [
@@ -89,5 +89,55 @@ describe('Universal KPI Card transformProps', () => {
     expect(props.trend?.label).toBe('Trend -0:05:00');
     expect(props.trend?.state).toBe('good');
     expect(props.noData).toBe(false);
+  });
+
+  it('uses the secondary metric time series for sparkline and trend when selected', () => {
+    const chartProps = new ChartProps({
+      width: 320,
+      height: 180,
+      formData: {
+        metric: 'AVG(oee)',
+        secondary_metric: 'AVG(oee_loss)',
+        granularity_sqla: 'event_time',
+        kpi_source_mode: 'direct_metric',
+        value_type_mode: 'percent',
+        sparkline_source: 'secondary_metric',
+        trend_source: 'secondary_metric',
+        trend_calculation_mode: 'absolute_difference',
+        trend_meaning: 'lower_is_better',
+      },
+      queriesData: [
+        {
+          data: [{ 'AVG(oee)': 59.3, 'AVG(oee_loss)': 40 }],
+        },
+        {
+          data: [
+            {
+              __timestamp: '2026-04-01T00:00:00Z',
+              'AVG(oee)': 58,
+              'AVG(oee_loss)': 40,
+            },
+            {
+              __timestamp: '2026-04-02T00:00:00Z',
+              'AVG(oee)': 59,
+              'AVG(oee_loss)': 28,
+            },
+            {
+              __timestamp: '2026-04-03T00:00:00Z',
+              'AVG(oee)': 60,
+              'AVG(oee_loss)': 16,
+            },
+          ],
+        },
+      ],
+      theme: {},
+    } as any);
+
+    const props = transformProps(chartProps);
+
+    expect(props.formattedValue).toBe('59.3%');
+    expect(props.sparklineData.map(point => point.value)).toEqual([40, 28, 16]);
+    expect(props.trend?.label).toBe('Trend -12.0%');
+    expect(props.trend?.state).toBe('good');
   });
 });

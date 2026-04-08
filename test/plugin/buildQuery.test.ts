@@ -46,6 +46,26 @@ describe('Universal KPI Card buildQuery', () => {
     expect(queryContext.queries[1].row_limit).toBe(250);
   });
 
+  it('uses the secondary time-series metric when sparkline and trend source are both secondary', () => {
+    const queryContext = buildQuery({
+      datasource: '5__table',
+      granularity_sqla: 'event_time',
+      metric: 'AVG(oee)',
+      secondary_metric: 'AVG(oee_loss)',
+      kpi_source_mode: 'direct_metric',
+      show_sparkline: true,
+      sparkline_source: 'secondary_metric',
+      enable_trend: true,
+      trend_source: 'secondary_metric',
+      trend_calculation_mode: 'absolute_difference',
+      viz_type: 'kpi_universal',
+    } as any);
+
+    expect(queryContext.queries).toHaveLength(2);
+    expect(queryContext.queries[1].metrics).toEqual(['AVG(oee_loss)']);
+    expect(queryContext.queries[1].is_timeseries).toBe(true);
+  });
+
   it('builds only one aggregate query when direct metric mode does not need time-series data', () => {
     const queryContext = buildQuery({
       datasource: '5__table',
@@ -53,7 +73,7 @@ describe('Universal KPI Card buildQuery', () => {
       kpi_source_mode: 'direct_metric',
       show_sparkline: false,
       enable_trend: true,
-      trend_calculation_mode: 'secondary_metric',
+      trend_calculation_mode: 'direct_secondary_value',
       viz_type: 'kpi_universal',
     } as any);
 

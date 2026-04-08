@@ -26,7 +26,9 @@ import type {
 import {
   DEFAULT_KPI_SOURCE_MODE,
   DEFAULT_ROW_LIMIT,
+  DEFAULT_SPARKLINE_SOURCE,
   DEFAULT_TREND_CALCULATION_MODE,
+  DEFAULT_TREND_SOURCE,
 } from '../constants';
 import type { KpiUniversalChartFormData } from '../types';
 import {
@@ -50,13 +52,36 @@ export default function buildQuery(formData: QueryFormData) {
   const kpiSourceMode = fd.kpi_source_mode ?? DEFAULT_KPI_SOURCE_MODE;
   const trendCalculationMode =
     fd.trend_calculation_mode ?? DEFAULT_TREND_CALCULATION_MODE;
-  const shouldQueryTimeseries = Boolean(
-    timeColumnLabel &&
-      primaryMetric &&
-      (showSparkline ||
-        kpiSourceMode === 'time_series' ||
-        (enableTrend && trendCalculationMode !== 'secondary_metric')),
+  const sparklineSource = fd.sparkline_source ?? DEFAULT_SPARKLINE_SOURCE;
+  const trendSource =
+    fd.trend_source ??
+    (trendCalculationMode === 'direct_secondary_value' ||
+    trendCalculationMode === 'secondary_metric'
+      ? 'secondary_metric'
+      : DEFAULT_TREND_SOURCE);
+  const usesSeriesTrend =
+    enableTrend &&
+    trendCalculationMode !== 'direct_secondary_value' &&
+    trendCalculationMode !== 'secondary_metric';
+  const shouldUseSecondarySparklineMetric = Boolean(
+    secondaryMetric && showSparkline && sparklineSource === 'secondary_metric',
   );
+  const shouldUseSecondaryTrendMetric = Boolean(
+    secondaryMetric && usesSeriesTrend && trendSource === 'secondary_metric',
+  );
+  const timeseriesMetrics = uniqueMetrics([
+    primaryMetric &&
+    (kpiSourceMode === 'time_series' ||
+      (showSparkline && !shouldUseSecondarySparklineMetric) ||
+      (usesSeriesTrend && !shouldUseSecondaryTrendMetric))
+      ? primaryMetric
+      : null,
+    secondaryMetric &&
+    (shouldUseSecondarySparklineMetric || shouldUseSecondaryTrendMetric)
+      ? secondaryMetric
+      : null,
+  ]);
+  const shouldQueryTimeseries = Boolean(timeColumnLabel && timeseriesMetrics.length);
 
   return buildQueryContext(formData, (baseQueryObject: QueryObject) => {
     const queries: QueryObject[] = [
@@ -75,7 +100,7 @@ export default function buildQuery(formData: QueryFormData) {
       queries.push({
         ...baseQueryObject,
         columns: [],
-        metrics: [primaryMetric],
+        metrics: timeseriesMetrics,
         // Let Superset own the grouped time-series SQL shape. Ordering by the raw
         // time column breaks on SQL Server once time grain aggregation is applied.
         orderby: [],

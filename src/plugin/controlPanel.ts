@@ -30,12 +30,16 @@ import {
   DEFAULT_KPI_VALUE_FONT_SIZE,
   DEFAULT_ROW_LIMIT,
   DEFAULT_SPARKLINE_FILL_OPACITY,
+  DEFAULT_SPARKLINE_HEIGHT,
   DEFAULT_SPARKLINE_LINE_WIDTH,
+  DEFAULT_SPARKLINE_SOURCE,
+  DEFAULT_SPARKLINE_WIDTH,
   DEFAULT_TITLE_FONT_SIZE,
   DEFAULT_TREND_CALCULATION_MODE,
   DEFAULT_TREND_FONT_SIZE,
   DEFAULT_TREND_LABEL_PREFIX,
   DEFAULT_TREND_MEANING,
+  DEFAULT_TREND_SOURCE,
   DEFAULT_VALUE_COLUMN_WIDTH_PERCENT,
 } from '../constants';
 
@@ -327,6 +331,20 @@ const controlPanel: ControlPanelConfig = {
                 ['first_vs_last_percent', t('First vs last percent')],
                 ['previous_vs_latest_percent', t('Previous vs latest percent')],
                 ['absolute_difference', t('Absolute difference')],
+                ['direct_secondary_value', t('Direct secondary value')],
+              ],
+            },
+          },
+          {
+            name: 'trend_source',
+            config: {
+              type: 'SelectControl',
+              label: t('Trend source'),
+              default: DEFAULT_TREND_SOURCE,
+              clearable: false,
+              renderTrigger: true,
+              choices: [
+                ['primary_metric', t('Primary metric')],
                 ['secondary_metric', t('Secondary metric')],
               ],
             },
@@ -396,6 +414,20 @@ const controlPanel: ControlPanelConfig = {
             },
           },
           {
+            name: 'sparkline_source',
+            config: {
+              type: 'SelectControl',
+              label: t('Sparkline source'),
+              default: DEFAULT_SPARKLINE_SOURCE,
+              clearable: false,
+              renderTrigger: true,
+              choices: [
+                ['primary_metric', t('Primary metric')],
+                ['secondary_metric', t('Secondary metric')],
+              ],
+            },
+          },
+          {
             name: 'sparkline_fill_opacity',
             config: {
               type: 'TextControl',
@@ -411,6 +443,30 @@ const controlPanel: ControlPanelConfig = {
               label: t('Sparkline line width'),
               default: DEFAULT_SPARKLINE_LINE_WIDTH,
               renderTrigger: true,
+            },
+          },
+        ],
+        [
+          {
+            name: 'sparkline_width',
+            config: {
+              type: 'TextControl',
+              label: t('Sparkline width'),
+              default: DEFAULT_SPARKLINE_WIDTH,
+              isInt: true,
+              renderTrigger: true,
+              description: t('Preferred sparkline width in pixels within the KPI tile.'),
+            },
+          },
+          {
+            name: 'sparkline_height',
+            config: {
+              type: 'TextControl',
+              label: t('Sparkline height'),
+              default: DEFAULT_SPARKLINE_HEIGHT,
+              isInt: true,
+              renderTrigger: true,
+              description: t('Preferred sparkline height in pixels within the KPI tile.'),
             },
           },
         ],

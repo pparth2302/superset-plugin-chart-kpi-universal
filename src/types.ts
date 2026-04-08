@@ -40,12 +40,14 @@ export type TrendCalculationMode =
   | 'first_vs_last_percent'
   | 'previous_vs_latest_percent'
   | 'absolute_difference'
+  | 'direct_secondary_value'
   | 'secondary_metric';
 export type TrendMeaning = 'higher_is_better' | 'lower_is_better';
 export type TrendState = 'good' | 'bad' | 'neutral' | 'missing';
 export type TrendDirection = 'positive' | 'negative' | 'neutral' | 'missing';
 export type SparklineType = 'line' | 'area';
 export type KpiSourceMode = 'time_series' | 'direct_metric';
+export type MetricSource = 'primary_metric' | 'secondary_metric';
 
 export interface SparklineDatum {
   timestamp: number;
@@ -95,6 +97,8 @@ export interface KpiUniversalChartFormData extends QueryFormData {
   kpi_aggregation_mode?: KpiAggregationMode;
   enable_trend?: boolean;
   trend_calculation_mode?: TrendCalculationMode;
+  trend_source?: MetricSource;
+  sparkline_source?: MetricSource;
   trend_meaning?: TrendMeaning;
   neutral_threshold?: number | string;
   show_positive_plus_sign?: boolean;
@@ -103,6 +107,12 @@ export interface KpiUniversalChartFormData extends QueryFormData {
   sparkline_smooth?: boolean;
   sparkline_fill_opacity?: number | string;
   sparkline_line_width?: number | string;
+  sparkline_width?: number | string;
+  sparkline_height?: number | string;
+  sparkline_width_percent?: number | string;
+  sparkline_height_percent?: number | string;
+  sparkline_right_offset?: number | string;
+  sparkline_bottom_offset?: number | string;
   card_padding?: number | string;
   border_radius?: number | string;
   show_border?: boolean;
@@ -135,6 +145,8 @@ export interface KpiUniversalChartProps {
   sparklineSmooth: boolean;
   sparklineFillOpacity: number;
   sparklineLineWidth: number;
+  sparklineWidth: number;
+  sparklineHeight: number;
   padding: number;
   borderRadius: number;
   showBorder: boolean;

@@ -22,14 +22,16 @@ import type { TrendState } from './types';
 
 export interface KpiThemeTokens {
   backgroundColor: string;
+  backgroundAccent: string;
   borderColor: string;
   primaryTextColor: string;
   secondaryTextColor: string;
   mutedTextColor: string;
   shadow: string;
   iconBackgroundColor: string;
+  iconBorderColor: string;
   iconColor: string;
-  sparklineColor: string;
+  sparklineLineColor: string;
   sparklineFillColor: string;
   statusColors: Record<TrendState, string>;
 }
@@ -90,7 +92,7 @@ export function resolveThemeTokens(theme: Record<string, any>): KpiThemeTokens {
     token.colorTextSecondary ?? grayscale.base ?? grayscale.light1 ?? '#475569';
   const mutedTextColor =
     token.colorTextTertiary ?? grayscale.light1 ?? '#64748b';
-  const sparklineColor = primary.base ?? token.colorPrimary ?? '#3b82f6';
+  const primaryAccent = primary.base ?? token.colorPrimary ?? '#3b82f6';
 
   return {
     backgroundColor:
@@ -98,27 +100,30 @@ export function resolveThemeTokens(theme: Record<string, any>): KpiThemeTokens {
       token.colorFillAlter ??
       grayscale.light5 ??
       'rgba(255, 255, 255, 0.96)',
+    backgroundAccent:
+      token.colorFillSecondary ?? withOpacity(primaryTextColor, 0.022),
     borderColor:
       token.colorBorderSecondary ??
       token.colorBorder ??
       theme?.gridColor ??
-      grayscale.light2 ??
-      'rgba(148, 163, 184, 0.35)',
+      withOpacity(primaryTextColor, 0.12),
     primaryTextColor,
     secondaryTextColor,
     mutedTextColor,
     shadow:
-      token.boxShadowSecondary ?? '0 10px 28px rgba(15, 23, 42, 0.12)',
+      token.boxShadowSecondary ?? '0 12px 24px rgba(15, 23, 42, 0.08)',
     iconBackgroundColor:
-      token.colorFillSecondary ?? withOpacity(primaryTextColor, 0.08),
-    iconColor: token.colorTextDescription ?? secondaryTextColor,
-    sparklineColor,
-    sparklineFillColor: withOpacity(sparklineColor, 0.18),
+      token.colorFillSecondary ?? withOpacity(primaryTextColor, 0.045),
+    iconBorderColor:
+      token.colorBorderSecondary ?? withOpacity(primaryTextColor, 0.08),
+    iconColor: token.colorTextDescription ?? withOpacity(secondaryTextColor, 0.92),
+    sparklineLineColor: withOpacity(primaryAccent, 0.78),
+    sparklineFillColor: withOpacity(primaryAccent, 0.12),
     statusColors: {
       good: success.base ?? '#16a34a',
       bad: error.base ?? token.colorError ?? '#dc2626',
       neutral: warning.base ?? token.colorWarning ?? '#ca8a04',
-      missing: token.colorTextQuaternary ?? mutedTextColor,
+      missing: token.colorTextQuaternary ?? withOpacity(mutedTextColor, 0.82),
     },
   };
 }
@@ -134,6 +139,7 @@ export function buildCardShellStyle(options: {
 }): CSSProperties {
   return {
     backgroundColor: options.themeTokens.backgroundColor,
+    backgroundImage: `linear-gradient(180deg, ${options.themeTokens.backgroundAccent} 0%, transparent 55%)`,
     border: options.showBorder ? `1px solid ${options.themeTokens.borderColor}` : 'none',
     borderRadius: options.borderRadius,
     boxShadow: options.showShadow ? options.themeTokens.shadow : 'none',
@@ -143,6 +149,7 @@ export function buildCardShellStyle(options: {
     height: options.height,
     overflow: 'hidden',
     padding: options.padding,
+    position: 'relative',
     width: options.width,
   };
 }

@@ -18,19 +18,23 @@
  */
 
 export const DEFAULT_ROW_LIMIT = 500;
-export const DEFAULT_CARD_PADDING = 20;
-export const DEFAULT_BORDER_RADIUS = 18;
-export const DEFAULT_TITLE_FONT_SIZE = 14;
-export const DEFAULT_KPI_VALUE_FONT_SIZE = 36;
-export const DEFAULT_TREND_FONT_SIZE = 13;
-export const DEFAULT_SPARKLINE_FILL_OPACITY = 0.18;
-export const DEFAULT_SPARKLINE_LINE_WIDTH = 2;
+export const DEFAULT_CARD_PADDING = 24;
+export const DEFAULT_BORDER_RADIUS = 22;
+export const DEFAULT_TITLE_FONT_SIZE = 12;
+export const DEFAULT_KPI_VALUE_FONT_SIZE = 44;
+export const DEFAULT_TREND_FONT_SIZE = 12;
+export const DEFAULT_SPARKLINE_FILL_OPACITY = 0.12;
+export const DEFAULT_SPARKLINE_LINE_WIDTH = 1.5;
+export const DEFAULT_SPARKLINE_WIDTH = 126;
+export const DEFAULT_SPARKLINE_HEIGHT = 46;
 export const DEFAULT_DECIMAL_PRECISION = 1;
 export const DEFAULT_TREND_LABEL_PREFIX = 'Trend';
-export const DEFAULT_VALUE_COLUMN_WIDTH_PERCENT = 58;
+export const DEFAULT_VALUE_COLUMN_WIDTH_PERCENT = 54;
 export const DEFAULT_NO_DATA_MESSAGE = 'No data';
 export const DEFAULT_KPI_SOURCE_MODE = 'time_series';
 export const DEFAULT_KPI_AGGREGATION_MODE = 'latest';
 export const DEFAULT_TREND_CALCULATION_MODE = 'previous_vs_latest_percent';
 export const DEFAULT_TREND_MEANING = 'higher_is_better';
 export const DEFAULT_DURATION_UNIT = 'seconds';
+export const DEFAULT_TREND_SOURCE = 'primary_metric';
+export const DEFAULT_SPARKLINE_SOURCE = 'primary_metric';
